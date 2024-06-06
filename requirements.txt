@@ -6,3 +6,5 @@ tenacity
 matplotlib
 seaborn
 wordcloud
+easyocr
+difflib
