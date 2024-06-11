@@ -1,14 +1,6 @@
 streamlit
 scikit-learn
 pandas
-plotly
-tenacity
-matplotlib
-seaborn
-wordcloud
-easyocr
-difflib
-cv2
 pytesseract
 Pillow
 speechrecognition
