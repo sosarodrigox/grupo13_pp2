@@ -1,6 +1,4 @@
 import streamlit as st
-from st_audiorec import st_audiorec
-import speech_recognition as sr
 import difflib
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -97,35 +95,7 @@ def ocr_tesseract(image_path):
 
 
 # Interfaz de usuario
-st.title("Grabador y Transcriptor de Audio")
-
-# Sección de grabación de audio
-audio_data = st_audiorec()
-
-# Verificar si hay datos de audio
-if audio_data is not None:
-    audio_file_path = "audio.wav"
-    with open(audio_file_path, "wb") as f:
-        f.write(audio_data)
-
-    recognizer = sr.Recognizer()
-    try:
-        with sr.AudioFile(audio_file_path) as source:
-            audio = recognizer.record(source)
-            texto_transcrito = recognizer.recognize_google(audio, language="es-ES")
-            st.write(f"El libro detectado es: {texto_transcrito}")
-
-            df_recomendaciones = recomendar_libros(texto_transcrito)
-            if not df_recomendaciones.empty:
-                st.write("Libros similares encontrados:")
-                st.dataframe(df_recomendaciones)
-            else:
-                st.write("Lo sentimos, no se encontraron libros similares.")
-
-    except sr.UnknownValueError:
-        st.write("No se pudo entender el audio.")
-    except sr.RequestError as e:
-        st.write(f"Error en la solicitud; {e}")
+st.title("Lector de Portadas de Libros")
 
 # Sección de subida y procesamiento de imágenes
 st.header("Sube una imagen de la portada de un libro")
