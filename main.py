@@ -8,7 +8,6 @@ import pytesseract
 from PIL import Image
 import re
 
-# Asegúrate de tener st_audiorec instalado.
 try:
     from st_audiorec import st_audiorec
 except ImportError:
@@ -101,10 +100,10 @@ def ocr_tesseract(image_path):
 
 
 # Interfaz de usuario
-st.title("Sistema de Recomendación de Libros")
+st.title("Sistema de Recomendación de Libros 📚🤖")
 
 # Sección de entrada de texto
-st.header("Entrada de Texto")
+st.header("Entrada de Texto 📝")
 libro_usuario = st.text_input("Ingrese el nombre de su libro favorito:")
 if st.button("Buscar Similares", key="texto"):
     if libro_usuario:
@@ -117,10 +116,10 @@ if st.button("Buscar Similares", key="texto"):
     else:
         st.write("Por favor, ingrese un título de libro.")
 
-st.divider()  # Agregar un divisor
+st.divider()
 
 # Sección de entrada de voz
-st.header("Entrada de Voz")
+st.header("Entrada de Voz 🎤")
 if "st_audiorec" in globals():
     audio_data = st_audiorec()
 
@@ -153,10 +152,10 @@ if "st_audiorec" in globals():
 else:
     st.write("Por favor, instala st_audiorec para usar esta función.")
 
-st.divider()  # Agregar un divisor
+st.divider()
 
 # Sección de entrada de imagen
-st.header("Entrada de Imagen")
+st.header("Entrada de Imagen 📸")
 imagen = st.file_uploader("Sube tu foto aquí:")
 
 if imagen:
