@@ -9,3 +9,7 @@ wordcloud
 easyocr
 difflib
 cv2
+pytesseract
+Pillow
+speechrecognition
+st-audiorec
