@@ -10,21 +10,15 @@ from PIL import Image
 import re
 
 
-# Función para limpiar texto
+# Función para limpiar texto y capitalizar palabras
 def limpiar_texto(texto):
-    return re.sub(r"[^a-zA-Z\s]", "", texto).strip()
-
-
-# Función para encontrar coincidencias cercanas entre dos listas
-def encontrar_coincidencias(lista1, lista2, umbral=0.25):
-    coincidencias = []
-    for item in lista1:
-        coincidencias_cercanas = difflib.get_close_matches(
-            item, lista2, n=1, cutoff=umbral
-        )
-        if coincidencias_cercanas:
-            coincidencias.append((item, coincidencias_cercanas[0]))
-    return coincidencias
+    texto = re.sub(r"[^a-zA-Z\s]", "", texto).strip()
+    texto = " ".join(texto.split())
+    texto = texto.title()  # Capitaliza la primera letra de cada palabra
+    palabras = texto.split()
+    if len(palabras) > 4:
+        texto = " ".join(palabras[:4])
+    return texto
 
 
 # Carga de datos
@@ -58,19 +52,22 @@ similitud = cosine_similarity(vector_caracteristicas, vector_caracteristicas)
 
 # Función para recomendar libros
 def recomendar_libros(nombre_libro):
-    st.write(f"Libro detectado: {nombre_libro}")
-    lista_titulos_completa = data["title"].tolist()
+    st.write(f"Libro seleccionado por el usuario: {nombre_libro}")
+    lista_titulos_completa = [title.lower() for title in data["title"].tolist()]
+    nombre_libro = nombre_libro.lower()
     encontrar_cercanos = difflib.get_close_matches(nombre_libro, lista_titulos_completa)
 
     if encontrar_cercanos:
         cercanos = encontrar_cercanos[0]
-        indice_de_libro = data[data.title == cercanos].index[0]
+        indice_de_libro = data[data.title.str.lower() == cercanos].index[0]
         puntaje_similitud = list(enumerate(similitud[indice_de_libro]))
         libros_similares_ordenados = sorted(
             puntaje_similitud, key=lambda x: x[1], reverse=True
         )
 
+        # Lista de diccionarios con los libros recomendados y su similitud
         recomendaciones = []
+        # Muestra los 10 primeros
         for i, (index, score) in enumerate(libros_similares_ordenados[1:11], 1):
             libro = {
                 "Indice": i,
@@ -82,18 +79,20 @@ def recomendar_libros(nombre_libro):
             }
             recomendaciones.append(libro)
 
+        # Convertir a un DataFrame
         df_recomendaciones = pd.DataFrame(recomendaciones)
         return df_recomendaciones
 
     else:
         st.write("No se encontró ninguna coincidencia para el libro ingresado.")
-        return pd.DataFrame()
+        return pd.DataFrame()  # DataFrame vacío si no hay coincidencias
 
 
 # Función de OCR usando Tesseract
 def ocr_tesseract(image_path):
     image = Image.open(image_path)
-    texto = pytesseract.image_to_string(image, lang="spa")  # 'spa' para español
+    texto = pytesseract.image_to_string(image, lang="eng")  # 'eng' para inglés
+    texto = limpiar_texto(texto)  # Limpiar texto y capitalizar palabras
     return texto
 
 
@@ -140,47 +139,14 @@ if imagen:
     portada = Image.open("uploaded_image.jpg")
     st.image(portada, width=200)
 
-    lectura_texto = ocr_tesseract("uploaded_image.jpg").upper()
-    libro = [lectura_texto]
+    lectura_texto = ocr_tesseract("uploaded_image.jpg")
+    st.write(f"He reconocido el siguiente texto: {lectura_texto}")
 
-    libro_str = libro[0][1:-1]
-    pattern = re.compile(r"\[[^\]]*\]|\d+\.\d+|\d+|[A-Z][A-Z ]*[A-Z]")
-    matches = pattern.findall(libro_str)
-    result = []
-    for match in matches:
-        if re.match(r"\d+\.\d+", match):
-            result.append(float(match))
-        elif re.match(r"\d+", match):
-            result.append(int(match))
-        else:
-            result.append(match.strip())
-
-    libro_limpio = [
-        limpiar_texto(str(item)) for item in result if limpiar_texto(str(item))
-    ]
-    libro_usuario = [item.upper() for item in libro_limpio]
-
-    df = pd.read_csv(url, header=0, encoding="latin-1")
-    titles = [title.upper().strip() for title in df["title"].tolist()]
-
-    coincidencias = encontrar_coincidencias(libro_usuario, titles, umbral=0.75)
-
-    if coincidencias:
-        coincidencia_index = max(
-            coincidencias, key=lambda tupla: len(max(tupla, key=len))
-        )
-        coincidencia_mas_relevante = coincidencia_index[1]
-
-        st.write("Se encontraron las siguientes coincidencias:")
-        df_resultado = df[
-            df["title"].str.upper().str.strip() == coincidencia_mas_relevante
-        ]
-        df_resultado = df_resultado.drop(columns=["portada"])
-        df_resultado = df_resultado.reset_index(drop=True)
-        df_resultado.columns = [col.upper() for col in df_resultado.columns]
-
-        st.dataframe(df_resultado, height=600)
+    df_recomendaciones = recomendar_libros(lectura_texto)
+    if not df_recomendaciones.empty:
+        st.write("Libros similares encontrados:")
+        st.dataframe(df_recomendaciones)
     else:
-        st.warning("No se encontraron coincidencias.")
+        st.write("Lo sentimos, no se encontraron libros similares.")
 else:
     st.warning("Por favor, carga una imagen.")
